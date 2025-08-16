@@ -10,35 +10,51 @@ type Props = {
 export default function Step1CompanyInfo({ onNext }: Props) {
   const { handleSubmit, control } = useForm();
 
-  const UploadBox = ({ helper, onChange }: any) => (
-    <Paper
-      variant="outlined"
-      sx={{
-        height: 200,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "2px dashed #cfd8dc",
-        bgcolor: "#fafafa",
-        borderRadius: 2,
-      }}
-    >
-      <Box sx={{ textAlign: "center" }}>
-        <CloudUploadOutlinedIcon sx={{ fontSize: 42, color: "#9aa5b1", mb: 1 }} />
-        <Typography component="span" sx={{ color: "#1a73e8", fontWeight: 600 }}>
-          Browse photo
-        </Typography>
-        <Typography component="span" sx={{ color: "#9aa5b1" }}>
-          {" "}
-          or drop here
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, color: "#9aa5b1" }}>
-          {helper}
-        </Typography>
-        <input type="file" hidden onChange={onChange} accept="image/*" />
-      </Box>
-    </Paper>
-  );
+  const UploadBox = ({ helper, onChange }: any) => {
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const handleClick = () => {
+      fileInputRef.current?.click();
+    };
+
+    return (
+      <Paper
+        variant="outlined"
+        onClick={handleClick}
+        sx={{
+          height: 200,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2px dashed #cfd8dc",
+          bgcolor: "#fafafa",
+          borderRadius: 2,
+          cursor: "pointer",
+          "&:hover": { bgcolor: "#f5f5f5" },
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <CloudUploadOutlinedIcon sx={{ fontSize: 42, color: "#9aa5b1", mb: 1 }} />
+          <Typography component="span" sx={{ color: "#1a73e8", fontWeight: 600 }}>
+            Browse photo
+          </Typography>
+          <Typography component="span" sx={{ color: "#9aa5b1" }}> or drop here</Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: "#9aa5b1" }}>
+            {helper}
+          </Typography>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            onChange={onChange}
+            accept="image/*"
+          />
+        </Box>
+      </Paper>
+    );
+  };
 
   return (
     <Box component="form" onSubmit={handleSubmit((v) => onNext?.(v))}>
