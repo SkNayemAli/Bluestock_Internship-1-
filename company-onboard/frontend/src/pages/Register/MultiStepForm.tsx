@@ -1,55 +1,107 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Box, Paper, Typography } from "@mui/material";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
+import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import Step1CompanyInfo from "./steps/Step1CompanyInfo";
 import Step2Address from "./steps/Step2Address";
 import Step3Documents from "./steps/Step3Documents";
-import { Paper, Stepper, Step, StepLabel, Box, Button } from "@mui/material";
-import api from "../../api/apiClient";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "../../features/auth/authSlice";
 
-const steps = ["Company Info", "Address", "Documents"];
+/**
+ * Nav labels + icons to mirror the design.
+ * We'll hook the remaining steps as you share their UIs.
+ */
+const NAV = [
+  { label: "Company Info", icon: <PersonOutlineOutlinedIcon fontSize="small" /> },
+  { label: "Founding Info", icon: <ApartmentOutlinedIcon fontSize="small" /> },
+  { label: "Social Media Profile", icon: <PublicOutlinedIcon fontSize="small" /> },
+  { label: "Contact", icon: <ChatBubbleOutlineOutlinedIcon fontSize="small" /> },
+];
 
 export default function MultiStepForm() {
   const [active, setActive] = useState(0);
-  const [data, setData] = useState<any>({});
-  const dispatch = useDispatch();
-
-  const next = (partial: any) => {
-    setData((d: any) => ({ ...d, ...partial }));
-    setActive((a) => a + 1);
-  };
-  const back = () => setActive((a) => a - 1);
-
-  const submit = async (finalData: any) => {
-    const form = new FormData();
-    Object.entries({ ...data, ...finalData }).forEach(([k,v]) => {
-      if (v !== undefined && v !== null) form.append(k, v as any);
-    });
-    try {
-      // Create company requires auth middleware; demonstration: register user first
-      const reg = await api.post("/auth/register", { email: finalData.ownerEmail, password: finalData.ownerPassword, name: finalData.ownerName, phone: finalData.ownerPhone });
-      dispatch(setCredentials({ user: reg.data.user, token: reg.data.token }));
-      // now create company
-      const res = await api.post("/company", form, { headers: { "Content-Type": "multipart/form-data" } });
-      alert("Company created: " + JSON.stringify(res.data.company));
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.response?.data?.message || "Error");
-    }
-  };
+  const percent = useMemo(() => Math.round((active / (NAV.length - 1)) * 100), [active]);
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Stepper activeStep={active} alternativeLabel>
-        {steps.map((s) => (
-          <Step key={s}><StepLabel>{s}</StepLabel></Step>
-        ))}
-      </Stepper>
-      <Box sx={{ mt: 3 }}>
-        {active === 0 && <Step1CompanyInfo onNext={next} />}
-        {active === 1 && <Step2Address onNext={next} onBack={back} />}
-        {active === 2 && <Step3Documents onBack={back} onSubmit={submit} />}
+    <Box>
+      {/* Header strip (logo + tabs + setup progress) */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          py: 2,
+          borderBottom: "1px solid #eceff1",
+          px: 2,
+          bgcolor: "#fff",
+        }}
+      >
+        {/* Brand (swap for your real logo if you have one in /public/logo.png) */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* <img src="/logo.png" alt="HireNext" width={28} height={28} /> */}
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: "8px",
+              background: "linear-gradient(135deg,#ff6b6b,#7c4dff)",
+            }}
+          />
+          <Typography sx={{ fontSize: 20, fontWeight: 700, letterSpacing: 0.2 }}>
+            HireNext<span style={{ color: "#5a6cf3" }}>.</span>
+          </Typography>
+        </Box>
+
+        {/* Tabs */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 3, flex: 1 }}>
+          {NAV.map((item, idx) => {
+            const activeTab = idx === active;
+            return (
+              <Box
+                key={item.label}
+                onClick={() => setActive(idx)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  color: activeTab ? "#1a73e8" : "#8a94a6",
+                  cursor: "pointer",
+                  pb: 1.25,
+                  borderBottom: activeTab ? "3px solid #1a73e8" : "3px solid transparent",
+                }}
+              >
+                {item.icon}
+                <Typography sx={{ fontWeight: 600, fontSize: 16 }}>{item.label}</Typography>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {/* Setup Progress */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{ color: "#697386" }}>Setup Progress</Typography>
+          <Typography sx={{ color: "#1a73e8", fontWeight: 700 }}>{percent}%</Typography>
+          <Typography sx={{ color: "#1a73e8" }}>Completed</Typography>
+        </Box>
       </Box>
-    </Paper>
+
+      {/* Content surface */}
+      <Box sx={{ p: 3 }}>
+        <Paper sx={{ p: 3, borderRadius: 2 }}>
+          {active === 0 && <Step1CompanyInfo onNext={() => setActive(1)} />}
+          {active === 1 && <Step2Address onNext={() => setActive(2)} onBack={() => setActive(0)} />}
+          {active === 2 && <Step3Documents onBack={() => setActive(1)} onSubmit={() => setActive(3)} />}
+          {active === 3 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
+                Contact
+              </Typography>
+              <Typography color="text.secondary">The Contact step UI will be added next.</Typography>
+            </Box>
+          )}
+        </Paper>
+      </Box>
+    </Box>
   );
 }
